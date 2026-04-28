@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Agent Hub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app" class="app">
+  <aside class="rail">
+    <div class="brand"><div class="mark">A</div><div><b>Agent Hub</b><span>Multi-Agent Console</span></div></div>
+    <button id="newChat" class="new-chat">＋ 新建对话</button>
+    <div class="search"><input id="searchChat" placeholder="搜索会话" /></div>
+    <div id="chatList" class="chat-list"></div>
+    <div class="rail-footer">
+      <button id="healthBtn">系统检测</button>
+      <button id="settingsBtn">设置</button>
+    </div>
+  </aside>
+
+  <main class="workspace">
+    <header class="header">
+      <div>
+        <h1 id="chatTitle">新的企业智能体会话</h1>
+        <p id="subTitle">Agent Hub · 多 Agent 工作台 · 多模态入口 · 浏览器经本地服务代理访问</p>
+      </div>
+      <div class="header-actions">
+        <span id="connBadge" class="badge unknown">未检测</span>
+        <button id="exportBtn">导出</button>
+      </div>
+    </header>
+
+    <section id="bootNotice" class="boot-notice hidden">
+      <strong>当前是预览模式</strong>
+      <p id="bootNoticeText">请先启动 Agent Hub 本地服务，再通过 `http://127.0.0.1:8765` 打开。这样浏览器只访问本地代理，不会直接触发各 Agent API 的 CORS 拦截。</p>
+      <code id="bootCommand">cd agent-hub && HERMES_BASE_URL=http://127.0.0.1:8642/v1 HERMES_MODEL=hermes-agent ./run.sh</code>
+    </section>
+
+    <section id="runStatus" class="run-status hidden" aria-live="polite">
+      <div class="run-status-bar"></div>
+      <div class="run-status-body">
+        <div>
+          <strong id="runStatusTitle">Agent Hub 正在处理</strong>
+          <p id="runStatusText">请求已发出，正在等待当前 Agent 返回。</p>
+        </div>
+        <div id="runStatusElapsed" class="run-status-elapsed">0.0s</div>
+      </div>
+    </section>
+
+    <section id="emptyState" class="empty-state">
+      <div class="hero-logo">A</div>
+      <h2>今天要让哪个 Agent 帮你做什么？</h2>
+      <p>选择一个场景开始，或直接输入任务。支持图片、文本/代码文件，多轮会话会保存在本机浏览器。</p>
+      <div class="prompt-grid">
+        <button class="prompt-card">分析这张产品截图，并给出改版建议</button>
+        <button class="prompt-card">读取附件代码，指出潜在问题</button>
+        <button class="prompt-card">帮我写一份企业 AI Agent 落地方案</button>
+        <button class="prompt-card">把这段需求拆成可执行任务清单</button>
+      </div>
+    </section>
+
+    <section id="messages" class="messages"></section>
+
+    <section class="composer-wrap">
+      <div id="attachments" class="attachments"></div>
+      <div class="composer">
+        <textarea id="input" placeholder="询问当前 Agent，或拖拽图片/文件到这里"></textarea>
+        <div class="composer-tools">
+          <button id="attachBtn" class="tool-button" title="上传附件" aria-label="上传附件">＋</button>
+          <span id="composerMode" class="composer-mode">Agent Hub</span>
+        </div>
+        <button id="sendBtn" class="send">发送</button>
+      </div>
+      <div class="composer-hint">企业提示：请勿在未授权的环境中上传敏感数据；当前版本会把附件内容发送给当前选中的本地 Agent。</div>
+      <input id="fileInput" type="file" multiple hidden accept="image/*,.txt,.md,.py,.js,.ts,.tsx,.jsx,.json,.yaml,.yml,.html,.css,.csv,.log" />
+    </section>
+  </main>
+</div>
+
+<div id="settingsModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head"><h2>Agent Hub 配置中心</h2><button class="icon" id="closeSettings">×</button></div>
+    <p id="settingsMeta" class="settings-meta">可导入本机已有的 Hermes / OpenClaw，也可手动新增自定义 Agent。</p>
+
+    <div class="settings-section">
+      <div class="section-title-row">
+        <h3>已配置 Agent</h3>
+        <button id="newProfileBtn">新增自定义 Agent</button>
+      </div>
+      <div id="profileList" class="profile-list"></div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title-row">
+        <h3>发现本机 Agent</h3>
+        <button id="discoverBtn">重新扫描</button>
+      </div>
+      <div id="discoverList" class="discover-list"></div>
+    </div>
+
+    <div class="settings-section">
+      <h3>连接详情</h3>
+      <label>Agent 名称</label>
+      <input id="profileLabel" placeholder="例如：Hermes 本机 / OpenClaw 本机 / 团队网关" />
+      <label>Agent 类型</label>
+      <select id="profileType">
+        <option value="hermes">Hermes</option>
+        <option value="openclaw">OpenClaw</option>
+        <option value="custom">自定义</option>
+      </select>
+      <label>连接方式</label>
+      <select id="profileAdapter">
+        <option value="openai-chat">OpenAI-compatible HTTP</option>
+        <option value="openclaw-gateway-rpc">OpenClaw Gateway RPC（推荐）</option>
+        <option value="openclaw-cli">OpenClaw CLI（兼容）</option>
+        <option value="openclaw-gateway">OpenClaw Gateway（仅配置）</option>
+      </select>
+      <label>Base URL / Gateway URL</label>
+      <input id="baseUrl" value="http://127.0.0.1:8642/v1" />
+      <label>Agent ID（OpenClaw 可用）</label>
+      <input id="profileAgentId" placeholder="例如：main / ops" />
+      <label>Model</label>
+      <input id="model" value="hermes-agent" />
+      <label>API Key / Token（可空）</label>
+      <input id="apiKey" type="password" placeholder="如果 Agent 需要鉴权，在这里填写" />
+      <label>备注（可空）</label>
+      <input id="profileNotes" placeholder="例如：本机开发环境 / 团队共享推理网关" />
+    </div>
+    <div class="modal-actions">
+      <button id="deleteProfileBtn">删除当前</button>
+      <button id="modelsBtn">读取模型</button>
+      <button id="saveSettings" class="primary">保存 Agent</button>
+    </div>
+    <pre id="settingsOutput"></pre>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

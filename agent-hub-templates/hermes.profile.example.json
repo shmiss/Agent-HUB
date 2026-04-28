@@ -1,0 +1,13 @@
+{
+  "id": "hermes-local-example",
+  "label": "Hermes 本机",
+  "type": "hermes",
+  "adapter": "openai-chat",
+  "baseUrl": "http://127.0.0.1:8642/v1",
+  "model": "hermes-agent",
+  "apiKey": "",
+  "supportsStream": true,
+  "supportsVision": true,
+  "source": "manual",
+  "notes": "Hermes API Server 本机连接示例"
+}

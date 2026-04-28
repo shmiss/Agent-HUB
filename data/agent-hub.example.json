@@ -1,0 +1,35 @@
+{
+  "profiles": [
+    {
+      "id": "hermes-local-example",
+      "label": "Hermes 本机",
+      "type": "hermes",
+      "adapter": "openai-chat",
+      "baseUrl": "http://127.0.0.1:8642/v1",
+      "model": "hermes-agent",
+      "apiKey": "",
+      "agentId": "",
+      "binaryPath": "",
+      "supportsStream": true,
+      "supportsVision": true,
+      "source": "example",
+      "notes": "OpenAI-compatible API 示例"
+    },
+    {
+      "id": "openclaw-local-example",
+      "label": "OpenClaw 本机",
+      "type": "openclaw",
+      "adapter": "openclaw-gateway-rpc",
+      "baseUrl": "ws://127.0.0.1:18789",
+      "model": "minimax/MiniMax-M2.7",
+      "apiKey": "",
+      "agentId": "main",
+      "binaryPath": "",
+      "supportsStream": false,
+      "supportsVision": true,
+      "source": "example",
+      "notes": "OpenClaw Gateway RPC 示例"
+    }
+  ],
+  "activeAgentId": "hermes-local-example"
+}

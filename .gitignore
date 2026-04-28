@@ -1,0 +1,11 @@
+# Runtime state / local secrets
+data/agent-hub.json
+data/agent-hub.json.bak-*
+*.log
+*.pid
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.venv/
+node_modules/

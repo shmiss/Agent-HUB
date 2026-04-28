@@ -1,0 +1,14 @@
+{
+  "id": "openclaw-local-example",
+  "label": "OpenClaw 本机",
+  "type": "openclaw",
+  "adapter": "openclaw-gateway-rpc",
+  "baseUrl": "ws://127.0.0.1:18789",
+  "agentId": "main",
+  "model": "minimax/MiniMax-M2.7",
+  "apiKey": "",
+  "supportsStream": false,
+  "supportsVision": false,
+  "source": "manual",
+  "notes": "OpenClaw 官方 CLI bridge 示例；通过 openclaw agent --json 调用"
+}
