@@ -1,5 +1,6 @@
 # Runtime state / local secrets
 data/agent-hub.json
+data/agent-hub.db*
 data/agent-hub.json.bak-*
 *.log
 *.pid

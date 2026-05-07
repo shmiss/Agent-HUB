@@ -10,9 +10,23 @@
 <div id="app" class="app">
   <aside class="rail">
     <div class="brand"><div class="mark">A</div><div><b>Agent Hub</b><span>Multi-Agent Console</span></div></div>
-    <button id="newChat" class="new-chat">＋ 新建对话</button>
-    <div class="search"><input id="searchChat" placeholder="搜索会话" /></div>
-    <div id="chatList" class="chat-list"></div>
+    <div class="rail-main">
+      <div class="rail-controls">
+        <button id="newChat" class="new-chat">＋ 新建对话</button>
+        <div class="search"><input id="searchChat" placeholder="搜索会话" /></div>
+        <div id="taskFilters" class="task-filters"></div>
+        <div class="task-toolbar">
+          <select id="taskSort">
+            <option value="updated_desc">最近更新</option>
+            <option value="created_desc">最近创建</option>
+            <option value="assets_desc">附件最多</option>
+            <option value="title_asc">名称 A-Z</option>
+          </select>
+          <button id="currentAgentOnly" class="task-toggle">当前 Agent</button>
+        </div>
+      </div>
+      <div id="chatList" class="chat-list"></div>
+    </div>
     <div class="rail-footer">
       <button id="healthBtn">系统检测</button>
       <button id="settingsBtn">设置</button>
@@ -30,37 +44,55 @@
         <button id="exportBtn">导出</button>
       </div>
     </header>
+    <div class="workspace-scroll">
+      <section id="taskOverview" class="task-overview"></section>
+      <section id="taskDetailPanels" class="task-detail-panels"></section>
 
-    <section id="bootNotice" class="boot-notice hidden">
-      <strong>当前是预览模式</strong>
-      <p id="bootNoticeText">请先启动 Agent Hub 本地服务，再通过 `http://127.0.0.1:8765` 打开。这样浏览器只访问本地代理，不会直接触发各 Agent API 的 CORS 拦截。</p>
-      <code id="bootCommand">cd agent-hub && HERMES_BASE_URL=http://127.0.0.1:8642/v1 HERMES_MODEL=hermes-agent ./run.sh</code>
-    </section>
+      <section id="bootNotice" class="boot-notice hidden">
+        <strong>当前是预览模式</strong>
+        <p id="bootNoticeText">请先启动 Agent Hub 本地服务，再通过 `http://127.0.0.1:8765` 打开。这样浏览器只访问本地代理，不会直接触发各 Agent API 的 CORS 拦截。</p>
+        <code id="bootCommand">cd agent-hub && HERMES_BASE_URL=http://127.0.0.1:8642/v1 HERMES_MODEL=hermes-agent ./run.sh</code>
+      </section>
 
-    <section id="runStatus" class="run-status hidden" aria-live="polite">
-      <div class="run-status-bar"></div>
-      <div class="run-status-body">
-        <div>
-          <strong id="runStatusTitle">Agent Hub 正在处理</strong>
-          <p id="runStatusText">请求已发出，正在等待当前 Agent 返回。</p>
+      <section id="runStatus" class="run-status hidden" aria-live="polite">
+        <div class="run-status-bar"></div>
+        <div class="run-status-body">
+          <div>
+            <strong id="runStatusTitle">Agent Hub 正在处理</strong>
+            <p id="runStatusText">请求已发出，正在等待当前 Agent 返回。</p>
+          </div>
+          <div class="run-status-actions">
+            <div id="runStatusElapsed" class="run-status-elapsed">0.0s</div>
+            <button id="cancelRunBtn" class="run-cancel" type="button">停止</button>
+          </div>
         </div>
-        <div id="runStatusElapsed" class="run-status-elapsed">0.0s</div>
-      </div>
-    </section>
+      </section>
 
-    <section id="emptyState" class="empty-state">
-      <div class="hero-logo">A</div>
-      <h2>今天要让哪个 Agent 帮你做什么？</h2>
-      <p>选择一个场景开始，或直接输入任务。支持图片、文本/代码文件，多轮会话会保存在本机浏览器。</p>
-      <div class="prompt-grid">
-        <button class="prompt-card">分析这张产品截图，并给出改版建议</button>
-        <button class="prompt-card">读取附件代码，指出潜在问题</button>
-        <button class="prompt-card">帮我写一份企业 AI Agent 落地方案</button>
-        <button class="prompt-card">把这段需求拆成可执行任务清单</button>
-      </div>
-    </section>
+      <section id="handoffBanner" class="handoff-banner hidden" aria-live="polite">
+        <div class="handoff-banner-head">
+          <div>
+            <strong id="handoffBannerTitle">最近一次 Agent 交接</strong>
+            <p id="handoffBannerMeta">切换 Agent 后会在这里展示交接摘要。</p>
+          </div>
+          <button id="dismissHandoffBtn" class="ghost-button" type="button">收起</button>
+        </div>
+        <pre id="handoffBannerContent" class="handoff-banner-content"></pre>
+      </section>
 
-    <section id="messages" class="messages"></section>
+      <section id="emptyState" class="empty-state">
+        <div class="hero-logo">A</div>
+        <h2>今天要让哪个 Agent 帮你做什么？</h2>
+        <p>选择一个场景开始，或直接输入任务。支持图片、文本/代码文件，以及 Word / Excel / PDF，多轮会话会保存在本机浏览器。</p>
+        <div class="prompt-grid">
+          <button class="prompt-card">分析这张产品截图，并给出改版建议</button>
+          <button class="prompt-card">读取附件代码，指出潜在问题</button>
+          <button class="prompt-card">帮我写一份企业 AI Agent 落地方案</button>
+          <button class="prompt-card">把这段需求拆成可执行任务清单</button>
+        </div>
+      </section>
+
+      <section id="messages" class="messages"></section>
+    </div>
 
     <section class="composer-wrap">
       <div id="attachments" class="attachments"></div>
@@ -68,74 +100,242 @@
         <textarea id="input" placeholder="询问当前 Agent，或拖拽图片/文件到这里"></textarea>
         <div class="composer-tools">
           <button id="attachBtn" class="tool-button" title="上传附件" aria-label="上传附件">＋</button>
-          <span id="composerMode" class="composer-mode">Agent Hub</span>
+          <div id="agentSwitcher" class="agent-switcher">
+            <button id="composerMode" class="composer-mode" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span id="composerModeLabel">Agent Hub</span>
+              <span class="composer-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div id="agentSwitchMenu" class="agent-switch-menu hidden" role="listbox" aria-label="快速切换 Agent"></div>
+          </div>
+          <div id="modelSwitcher" class="model-switcher">
+            <button id="modelMode" class="model-mode" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span id="modelModeLabel">Model</span>
+              <span class="composer-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div id="modelSwitchMenu" class="model-switch-menu hidden" role="listbox" aria-label="快速切换模型"></div>
+          </div>
         </div>
-        <button id="sendBtn" class="send">发送</button>
+        <div class="composer-submit">
+          <button id="cancelComposerBtn" class="send-cancel hidden" type="button">停止</button>
+          <button id="sendBtn" class="send">发送</button>
+        </div>
       </div>
-      <div class="composer-hint">企业提示：请勿在未授权的环境中上传敏感数据；当前版本会把附件内容发送给当前选中的本地 Agent。</div>
-      <input id="fileInput" type="file" multiple hidden accept="image/*,.txt,.md,.py,.js,.ts,.tsx,.jsx,.json,.yaml,.yml,.html,.css,.csv,.log" />
+      <div class="composer-hint">企业提示：请勿在未授权的环境中上传敏感数据；当前版本支持图片、文本/代码文件，以及 .docx / .xlsx / .pdf，并会把解析后的内容发送给当前选中的本地 Agent。</div>
+      <input id="fileInput" type="file" multiple hidden accept="image/*,.txt,.md,.py,.js,.ts,.tsx,.jsx,.json,.yaml,.yml,.html,.css,.csv,.log,.pdf,.docx,.xlsx" />
     </section>
   </main>
 </div>
 
-<div id="settingsModal" class="modal hidden">
-  <div class="modal-card">
-    <div class="modal-head"><h2>Agent Hub 配置中心</h2><button class="icon" id="closeSettings">×</button></div>
-    <p id="settingsMeta" class="settings-meta">可导入本机已有的 Hermes / OpenClaw，也可手动新增自定义 Agent。</p>
-
-    <div class="settings-section">
-      <div class="section-title-row">
-        <h3>已配置 Agent</h3>
-        <button id="newProfileBtn">新增自定义 Agent</button>
+<div id="settingsModal" class="modal settings-modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" aria-describedby="settingsMeta">
+  <div class="modal-card settings-dialog" tabindex="-1">
+    <div class="modal-head settings-dialog-head">
+      <div>
+        <div class="settings-dialog-kicker">AGENT HUB CONTROL CENTER</div>
+        <h2 id="settingsTitle">设置</h2>
+        <p id="settingsMeta" class="settings-meta">面向未来多 Agent 工作台的控制中枢：统一管理 Agent、上下文记忆、发现接入与运行诊断。</p>
       </div>
-      <div id="profileList" class="profile-list"></div>
+      <button class="icon settings-close" id="closeSettings" aria-label="关闭设置">×</button>
     </div>
 
-    <div class="settings-section">
-      <div class="section-title-row">
-        <h3>发现本机 Agent</h3>
-        <button id="discoverBtn">重新扫描</button>
+    <div class="settings-shell">
+      <aside class="settings-nav">
+        <button class="settings-nav-item active" data-settings-tab="overview">总览</button>
+        <button class="settings-nav-item" data-settings-tab="agents">Agent Registry</button>
+        <button class="settings-nav-item" data-settings-tab="models">Model Registry</button>
+        <button class="settings-nav-item" data-settings-tab="discovery">本机发现</button>
+        <button class="settings-nav-item" data-settings-tab="context">上下文中枢</button>
+        <button class="settings-nav-item" data-settings-tab="diagnostics">诊断与输出</button>
+      </aside>
+
+      <div class="settings-content">
+        <section class="settings-panel active" data-settings-panel="overview">
+          <div class="settings-section first">
+            <h3>Agent Hub · 控制塔</h3>
+            <div class="settings-hero-grid overview">
+              <div class="settings-hero-card">
+                <strong>当前阶段</strong>
+                <p>已完成本地双 Agent 接入，正在向“上下文中枢”演进。</p>
+              </div>
+              <div class="settings-hero-card">
+                <strong>下一步重点</strong>
+                <p>强化任务记忆、附件资产管理与多 Agent 交接效率。</p>
+              </div>
+            </div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-summary-card">
+              <strong>使用建议</strong>
+              <p>日常配置去「Agent Registry」，本机接入去「本机发现」，任务记忆与附件状态去「上下文中枢」。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-panel" data-settings-panel="agents">
+          <div class="settings-section first">
+            <div class="section-title-row">
+              <h3>已配置 Agent</h3>
+              <button id="newProfileBtn">新增自定义 Agent</button>
+            </div>
+            <div id="profileList" class="profile-list"></div>
+          </div>
+          <div class="settings-section">
+            <h3>连接详情</h3>
+            <label>Agent 名称</label>
+            <input id="profileLabel" placeholder="例如：Hermes 本机 / OpenClaw 本机 / 团队网关" />
+            <label>Agent 类型</label>
+            <select id="profileType">
+              <option value="hermes">Hermes</option>
+              <option value="openclaw">OpenClaw</option>
+              <option value="claude">Claude Code</option>
+              <option value="custom">自定义</option>
+            </select>
+            <label>连接方式</label>
+            <select id="profileAdapter">
+              <option value="openai-chat">OpenAI-compatible HTTP</option>
+              <option value="openclaw-gateway-rpc">OpenClaw Gateway RPC（推荐）</option>
+              <option value="openclaw-cli">OpenClaw CLI（兼容）</option>
+              <option value="openclaw-gateway">OpenClaw Gateway（仅配置）</option>
+              <option value="claude-code-cli">Claude Code CLI</option>
+            </select>
+            <label>Base URL / Gateway URL</label>
+            <input id="baseUrl" value="http://127.0.0.1:8642/v1" />
+            <label>Agent ID（OpenClaw 可用）</label>
+            <input id="profileAgentId" placeholder="例如：main / ops" />
+            <label>Model</label>
+            <input id="model" value="hermes-agent" />
+            <label>API Key / Token（可空）</label>
+            <input id="apiKey" type="password" placeholder="如果 Agent 需要鉴权，在这里填写" />
+            <label>备注（可空）</label>
+            <input id="profileNotes" placeholder="例如：本机开发环境 / 团队共享推理网关" />
+            <div class="modal-actions">
+              <button id="deleteProfileBtn">删除当前</button>
+              <button id="modelsBtn">读取模型</button>
+              <button id="saveSettings" class="primary">保存 Agent</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-panel" data-settings-panel="models">
+          <div class="settings-section first">
+            <div class="section-title-row">
+              <h3>模型总控台</h3>
+              <div class="section-actions-inline">
+                <button id="refreshActiveModelsBtn">读取当前 Agent 模型</button>
+                <button id="addCustomModelBtn">添加当前 Agent 模型</button>
+              </div>
+            </div>
+            <div id="modelRegistryPanel" class="model-registry-panel"></div>
+          </div>
+        </section>
+
+        <section class="settings-panel" data-settings-panel="discovery">
+          <div class="settings-section first">
+            <div class="section-title-row">
+              <h3>发现本机 Agent</h3>
+              <button id="discoverBtn">重新扫描</button>
+            </div>
+            <div id="discoverList" class="discover-list"></div>
+          </div>
+        </section>
+
+        <section class="settings-panel" data-settings-panel="context">
+          <div class="settings-section first">
+            <div class="section-title-row">
+              <h3>项目工作区</h3>
+              <button id="inspectWorkspaceBtn">检查并绑定</button>
+            </div>
+            <div class="workspace-bind-row">
+              <input id="workspacePathInput" placeholder="/Users/you/project，绑定后 Claude/OpenClaw/Codex 可围绕该项目继续任务" />
+              <button id="clearWorkspaceBtn">清除</button>
+            </div>
+            <div id="workspaceStatus" class="workspace-status">当前任务未绑定项目路径。</div>
+          </div>
+          <div class="settings-section first">
+            <div class="section-title-row">
+              <h3>当前会话上下文</h3>
+              <button id="refreshContextBtn">刷新状态</button>
+            </div>
+            <div id="contextPanel" class="context-panel"></div>
+          </div>
+          <div class="settings-section">
+            <div class="section-title-row">
+              <h3>Context Package</h3>
+              <button id="refreshContextPackageBtn">生成上下文包</button>
+            </div>
+            <div class="context-strategy-row">
+              <label>上下文策略</label>
+              <select id="contextStrategySelect">
+                <option value="light">轻量</option>
+                <option value="standard">标准</option>
+                <option value="full">完整</option>
+                <option value="file">文件任务</option>
+                <option value="code">代码任务</option>
+              </select>
+              <span id="contextStrategyHint">标准：摘要、交接、文件、最近记录和项目记忆。</span>
+            </div>
+            <div id="contextPackagePanel" class="context-package-panel">暂无上下文包。点击生成后可查看将注入给 Agent 的标准任务上下文。</div>
+          </div>
+          <div class="settings-section">
+            <div class="section-title-row">
+              <h3>项目记忆</h3>
+              <div class="section-actions-inline">
+                <button id="extractMemoriesBtn">从当前任务提取</button>
+                <button id="refreshMemoriesBtn">刷新记忆</button>
+              </div>
+            </div>
+            <div id="projectMemoryPanel" class="project-memory-panel">绑定项目工作区后，可沉淀项目规则、常用命令、文件路径和 Agent 执行经验。</div>
+          </div>
+          <div class="settings-section">
+            <h3>上下文中枢说明</h3>
+            <div class="settings-hero-grid compact">
+              <div class="settings-hero-card">
+                <strong>任务 Session</strong>
+                <p>会话标题、任务目标、状态、下一步建议，全部服务端持久化。</p>
+              </div>
+              <div class="settings-hero-card">
+                <strong>Agent Handoff</strong>
+                <p>切换 Agent 时自动生成交接摘要，减少重复沟通。</p>
+              </div>
+              <div class="settings-hero-card">
+                <strong>附件资产</strong>
+                <p>可固定到上下文，逐步演化为任务资料库与文件中枢。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-panel" data-settings-panel="diagnostics">
+          <div class="settings-section first">
+            <h3>诊断输出</h3>
+            <pre id="settingsOutput"></pre>
+          </div>
+        </section>
       </div>
-      <div id="discoverList" class="discover-list"></div>
     </div>
-
-    <div class="settings-section">
-      <h3>连接详情</h3>
-      <label>Agent 名称</label>
-      <input id="profileLabel" placeholder="例如：Hermes 本机 / OpenClaw 本机 / 团队网关" />
-      <label>Agent 类型</label>
-      <select id="profileType">
-        <option value="hermes">Hermes</option>
-        <option value="openclaw">OpenClaw</option>
-        <option value="custom">自定义</option>
-      </select>
-      <label>连接方式</label>
-      <select id="profileAdapter">
-        <option value="openai-chat">OpenAI-compatible HTTP</option>
-        <option value="openclaw-gateway-rpc">OpenClaw Gateway RPC（推荐）</option>
-        <option value="openclaw-cli">OpenClaw CLI（兼容）</option>
-        <option value="openclaw-gateway">OpenClaw Gateway（仅配置）</option>
-      </select>
-      <label>Base URL / Gateway URL</label>
-      <input id="baseUrl" value="http://127.0.0.1:8642/v1" />
-      <label>Agent ID（OpenClaw 可用）</label>
-      <input id="profileAgentId" placeholder="例如：main / ops" />
-      <label>Model</label>
-      <input id="model" value="hermes-agent" />
-      <label>API Key / Token（可空）</label>
-      <input id="apiKey" type="password" placeholder="如果 Agent 需要鉴权，在这里填写" />
-      <label>备注（可空）</label>
-      <input id="profileNotes" placeholder="例如：本机开发环境 / 团队共享推理网关" />
-    </div>
-    <div class="modal-actions">
-      <button id="deleteProfileBtn">删除当前</button>
-      <button id="modelsBtn">读取模型</button>
-      <button id="saveSettings" class="primary">保存 Agent</button>
-    </div>
-    <pre id="settingsOutput"></pre>
   </div>
 </div>
 
+<div id="runDebugModal" class="modal run-debug-modal hidden" role="dialog" aria-modal="true" aria-labelledby="runDebugTitle">
+  <div class="modal-card run-debug-dialog" tabindex="-1">
+    <div class="modal-head run-debug-head">
+      <div>
+        <div class="settings-dialog-kicker">RUN DEBUG PANEL</div>
+        <h2 id="runDebugTitle">执行详情</h2>
+        <p id="runDebugMeta" class="settings-meta">查看本次 Agent Run 的上下文、输入、输出、错误和耗时。</p>
+      </div>
+      <button class="icon settings-close" id="closeRunDebug" aria-label="关闭执行详情">×</button>
+    </div>
+    <div id="runDebugContent" class="run-debug-content"></div>
+  </div>
+</div>
+
+<script src="agents.js"></script>
+<script src="api.js"></script>
+<script src="state.js"></script>
+<script src="context.js"></script>
+<script src="render-chat.js"></script>
+<script src="render-task-list.js"></script>
+<script src="render-task-detail.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

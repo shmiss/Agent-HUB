@@ -10,8 +10,10 @@ Agent Hub 是一个本地多 Agent 工作台，提供类 ChatGPT 的网页交互
 - OpenClaw Gateway RPC WebSocket 直连（优先）
 - OpenClaw CLI Bridge 兼容模式
 - 图片 / 文本 / 代码附件上传
+- Word / Excel / PDF 附件解析
 - 运行状态可视化、耗时展示
-- 多会话本地保存与 Markdown 导出
+- SQLite 会话存储、任务上下文、交接摘要与 Markdown 导出
+- 附件固定到上下文 / 取消固定
 - 运行配置保存在 `data/agent-hub.json`，默认已被 `.gitignore` 忽略
 
 ## 安装依赖
@@ -86,7 +88,8 @@ data/agent-hub.example.json
 
 - Gateway RPC 流式事件透传
 - Agent 运行过程细粒度事件展示
-- 后端数据库保存会话
+- 服务端会话单一真相源
+- Gateway RPC 流式事件透传
 - SSO / OAuth
 - 权限、部门、审计日志
 - 附件服务端解析与安全扫描
